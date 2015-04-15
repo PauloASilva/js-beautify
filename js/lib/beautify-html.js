@@ -128,6 +128,7 @@
         extra_liners = Array.isArray(options.extra_liners) ?
             options.extra_liners.concat() : (typeof options.extra_liners === 'string') ?
             options.extra_liners.split(',') : 'head,body,/html'.split(',');
+        close_empty_tags_on_new_line = (options.close_empty_tags_on_new_line === undefined) ? false : options.close_empty_tags_on_new_line;
         function Parser() {
 
             this.pos = 0; //Parser position
@@ -784,7 +785,7 @@
                     multi_parser.current_mode = 'CONTENT';
                     break;
                 case 'TK_TAG_END':
-                    //Print new line only if the tag has no content and has child
+                    //Print new line only if the tag has no content and has child or close_empty_tags_on_new_line is true
                     if (multi_parser.last_token === 'TK_CONTENT' && multi_parser.last_text === '') {
                         var tag_name = multi_parser.token_text.match(/\w+/)[0];
                         var tag_extracted_from_last_output = null;
@@ -792,9 +793,11 @@
                             tag_extracted_from_last_output = multi_parser.output[multi_parser.output.length - 1].match(/(?:<|{{#)\s*(\w+)/);
                         }
                         if (tag_extracted_from_last_output === null ||
-                            (tag_extracted_from_last_output[1] !== tag_name && !multi_parser.Utils.in_array(tag_extracted_from_last_output[1], unformatted))) {
+                            (tag_extracted_from_last_output[1] !== tag_name && !multi_parser.Utils.in_array(tag_extracted_from_last_output[1], unformatted)) || 
+                            close_empty_tags_on_new_line === true) {
                             multi_parser.print_newline(false, multi_parser.output);
                         }
+                        
                     }
                     multi_parser.print_token(multi_parser.token_text);
                     multi_parser.current_mode = 'CONTENT';
